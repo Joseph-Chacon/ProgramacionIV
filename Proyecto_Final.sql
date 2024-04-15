@@ -173,4 +173,7 @@ CREATE SEQUENCE Empleados_seq
     NOCYCLE;
 
 
-DROP TABLE CAPACITACION;
+
+
+
+//Prueba para el control de versiones en github
