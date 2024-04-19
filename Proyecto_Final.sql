@@ -165,15 +165,81 @@ BEGIN
 END InsertarEmpleado;
 /
 
-commit;
+
+CREATE OR REPLACE PROCEDURE InsertarCapacitacion (
+    p_id_capacitacion IN NUMBER,
+    p_nombre_curso IN VARCHAR2,
+    p_fecha_inicio IN DATE,
+    p_fecha_fin IN DATE,
+    p_descripcion IN VARCHAR2
+)
+IS
+BEGIN
+    INSERT INTO Capacitacion (id_capacitacion, nombre_curso, fecha_inicio, fecha_fin, descripcion)
+    VALUES (p_id_capacitacion, p_nombre_curso, p_fecha_inicio, p_fecha_fin, p_descripcion);
+    
+    COMMIT;
+END InsertarCapacitacion;
+/
+
+
+//Autoincremental el valor del id en las tablas
 CREATE SEQUENCE Empleados_seq
     START WITH 1
     INCREMENT BY 1
     NOCACHE
     NOCYCLE;
 
+CREATE SEQUENCE Auditoria_seq
+    START WITH 1
+    INCREMENT BY 1
+    NOCACHE
+    NOCYCLE;
+
+
+//Inserción en la tabla de empleados por medio del procedimiento almacenado
+BEGIN
+    InsertarEmpleado(
+        'Esteban',
+        'Navarro',
+        TO_DATE('2003-07-22', 'YYYY-MM-DD'),
+        'Puntarenas',
+        'Coto Brus',
+        'San Vito',
+        'Barrio Tres Rios',
+        '83322654',
+        'esteban.navarro@gmail.com',
+        TO_DATE('2023-05-10', 'YYYY-MM-DD'),
+        800000,
+        'Empleado',
+        1, -- ID del departamento
+        NULL -- ID del supervisor (opcional)
+    );
+END;
+/
+
+//Trigger para llevar el control de los registros nuevos ingresados
+CREATE OR REPLACE TRIGGER insercion_empleado
+BEFORE INSERT ON Empleados
+FOR EACH ROW
+BEGIN
+    INSERT INTO Auditoria(id_auditoria, fecha, tipo, descripcion, persona) VALUES
+    (Auditoria_seq.NEXTVAL, SYSDATE, 'Nuevo', 'Se contrato un nuevo empleado: ' || :NEW.nombre, NULL);
+END;
+/
+
+//Vistas para facilitar acceso a la información
+
+CREATE VIEW empleados_informatica AS 
+SELECT COUNT(*) AS Total_Empleados FROM Empleados WHERE id_departamento = 1;
+
+CREATE VIEW empleados_departamento AS
+SELECT e.nombre AS nombre_empleado, e.salario, d.nombre AS nombre_departamento
+FROM empleados e
+JOIN departamentos d ON e.id_departamento = d.id_departamento;
 
 
 
+ALTER TABLE nombre_tabla ENABLE CONSTRAINT nombre_restriccion;
 
-//Prueba para el control de versiones en github
+select * from empleados_departamento;
