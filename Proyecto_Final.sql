@@ -183,6 +183,20 @@ END InsertarCapacitacion;
 /
 
 
+CREATE OR REPLACE PROCEDURE InsertarVacante (
+    p_titulo IN VARCHAR2,
+    p_descripcion IN VARCHAR2,
+    p_fecha_publicacion IN DATE,
+    p_fecha_cierre IN DATE
+)
+IS
+BEGIN
+    INSERT INTO Vacantes (id_vacante, titulo, descripcion, fecha_publicacion_vacante, fecha_cierre_vacante)
+    VALUES (Vacantes_seq.NEXTVAL, p_titulo, p_descripcion, p_fecha_publicacion, p_fecha_cierre);
+    COMMIT;
+END InsertarVacante;
+/
+
 //Autoincremental el valor del id en las tablas
 CREATE SEQUENCE Empleados_seq
     START WITH 1
@@ -191,6 +205,12 @@ CREATE SEQUENCE Empleados_seq
     NOCYCLE;
 
 CREATE SEQUENCE Auditoria_seq
+    START WITH 1
+    INCREMENT BY 1
+    NOCACHE
+    NOCYCLE;
+    
+CREATE SEQUENCE Vacantes_seq
     START WITH 1
     INCREMENT BY 1
     NOCACHE
@@ -228,6 +248,17 @@ BEGIN
 END;
 /
 
+CREATE OR REPLACE TRIGGER salario_empleado
+BEFORE UPDATE ON Empleados
+FOR EACH ROW
+BEGIN
+    IF :OLD.salario != :NEW.salario THEN
+        INSERT INTO Auditoria(id_auditoria, fecha, tipo, descripcion, persona) VALUES
+        (Auditoria_seq.NEXTVAL, SYSDATE, 'Actualizar', 'Cambio de salario, Antes: ' || :OLD.salario || ' Ahora: ' || :NEW.salario, :NEW.nombre);
+    END IF;
+END;
+/
+    
 //Vistas para facilitar acceso a la información
 
 CREATE VIEW empleados_informatica AS 
@@ -239,7 +270,4 @@ FROM empleados e
 JOIN departamentos d ON e.id_departamento = d.id_departamento;
 
 
-
-ALTER TABLE nombre_tabla ENABLE CONSTRAINT nombre_restriccion;
-
-select * from empleados_departamento;
+COMMIT;
